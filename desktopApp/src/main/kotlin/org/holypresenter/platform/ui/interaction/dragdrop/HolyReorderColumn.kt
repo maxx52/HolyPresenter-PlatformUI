@@ -22,7 +22,6 @@ fun <T> HolyReorderColumn(
 
     Column(modifier = modifier) {
         items.forEachIndexed { index, item ->
-
             val isDragging = dragState.draggingIndex == index
 
             Column(
@@ -38,17 +37,20 @@ fun <T> HolyReorderColumn(
                         detectDragGesturesAfterLongPress(
                             onDragStart = {
                                 dragOffsetY = 0f
-                                dragState.startDrag(item, index)
+                                dragState.startDrag(item, index, it)
                             },
                             onDrag = { change, dragAmount ->
                                 change.consume()
-                                dragOffsetY += dragAmount.y
 
-                                val approximateTarget =
-                                    (index + (dragOffsetY / 72f).roundToInt())
-                                        .coerceIn(0, items.lastIndex)
+                                if (dragState.draggingIndex == index) {
+                                    dragOffsetY += dragAmount.y
 
-                                dragState.moveTo(approximateTarget)
+                                    val targetIndex =
+                                        (index + (dragOffsetY / 72f).roundToInt())
+                                            .coerceIn(0, items.lastIndex)
+
+                                    dragState.updateTarget(targetIndex)
+                                }
                             },
                             onDragEnd = {
                                 dragState.finishDrag()?.let { (from, to) ->
