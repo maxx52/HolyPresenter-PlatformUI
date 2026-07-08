@@ -3,15 +3,19 @@ package org.holypresenter.platform.ui.interaction.dragdrop
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 
 class HolyDragState<T> {
     var draggingItem: T? by mutableStateOf(null)
         private set
 
-    var draggingIndex: Int by mutableStateOf(-1)
+    var draggingIndex by mutableStateOf(-1)
         private set
 
-    var targetIndex: Int by mutableStateOf(-1)
+    var targetIndex by mutableStateOf(-1)
+        private set
+
+    var pointerPosition by mutableStateOf(Offset.Zero)
         private set
 
     val isDragging: Boolean
@@ -19,19 +23,26 @@ class HolyDragState<T> {
 
     fun startDrag(
         item: T,
-        index: Int
+        index: Int,
+        pointer: Offset
     ) {
         draggingItem = item
         draggingIndex = index
         targetIndex = index
+        pointerPosition = pointer
     }
 
-    fun moveTo(index: Int) {
+    fun updatePointer(pointer: Offset) {
+        pointerPosition = pointer
+    }
+
+    fun updateTarget(index: Int) {
         targetIndex = index
     }
 
     fun finishDrag(): Pair<Int, Int>? {
-        if (!isDragging) return null
+        if (!isDragging)
+            return null
 
         val result = draggingIndex to targetIndex
 
@@ -48,5 +59,6 @@ class HolyDragState<T> {
         draggingItem = null
         draggingIndex = -1
         targetIndex = -1
+        pointerPosition = Offset.Zero
     }
 }
