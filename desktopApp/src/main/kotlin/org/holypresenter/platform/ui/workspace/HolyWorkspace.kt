@@ -8,36 +8,24 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun HolyWorkspace(
     modifier: Modifier = Modifier,
-    toolbar: @Composable () -> Unit = {},
-    content: @Composable () -> Unit,
-    statusBar: @Composable () -> Unit = {}
+    sidePaneWidth: Int = 340,
+    left: @Composable BoxScope.() -> Unit,
+    right: @Composable BoxScope.() -> Unit
 ) {
-    Column(
-        modifier = modifier.fillMaxSize()
+    Row(
+        modifier = modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
+            modifier = Modifier.weight(1f)
         ) {
-            toolbar()
+            left()
         }
 
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+            modifier = Modifier.width(sidePaneWidth.dp)
         ) {
-            content()
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            statusBar()
+            right()
         }
     }
 }

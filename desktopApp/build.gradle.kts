@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "org.holypresenter"
-version = "0.1.0"
+version = "0.2.0"
 
 repositories {
     mavenLocal()
@@ -17,7 +17,7 @@ repositories {
 dependencies {
     implementation("org.jetbrains.compose.runtime:runtime:1.11.1")
     implementation("org.jetbrains.compose.foundation:foundation:1.11.1")
-    implementation("org.jetbrains.compose.material3:material3:1.9.0")
+    implementation(libs.androidx.material3.desktop)
 }
 
 publishing {
