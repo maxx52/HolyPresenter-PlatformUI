@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "org.holypresenter"
-version = "0.3.0"
+version = "0.4.0"
 
 repositories {
     mavenLocal()
