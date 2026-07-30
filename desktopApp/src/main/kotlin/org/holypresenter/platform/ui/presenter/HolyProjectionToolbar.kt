@@ -16,14 +16,17 @@ fun HolyProjectionToolbar(
     onCloseProjection: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    showShortcutsHint: Boolean = true
+    showShortcutsHint: Boolean = true,
+    compact: Boolean = false
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        if (showShortcutsHint) {
+        if (
+            showShortcutsHint && !compact
+        ) {
             HolyProjectionShortcutsHint()
         }
 
@@ -31,6 +34,7 @@ fun HolyProjectionToolbar(
             isBlackScreen = isBlackScreen,
             isTextHidden = isTextHidden,
             enabled = enabled,
+            compact = compact,
             onToggleBlackScreen = onToggleBlackScreen,
             onToggleTextVisibility = onToggleTextVisibility,
             onCloseProjection = onCloseProjection
