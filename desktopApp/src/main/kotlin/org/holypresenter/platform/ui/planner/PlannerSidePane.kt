@@ -40,7 +40,11 @@ import org.holypresenter.platform.ui.workspace.HolySidePane
 fun PlannerSidePane(
     plannerService: PlannerService?,
     modifier: Modifier = Modifier,
-    onItemClick: (item: PlannerItem, index: Int) -> Unit = { _, _ -> }
+    emptyStateText: String = "Добавьте элемент в план",
+    onItemClick: (
+        item: PlannerItem,
+        index: Int
+    ) -> Unit = { _, _ -> }
 ) {
     val items = plannerService
         ?.state
@@ -132,10 +136,8 @@ fun PlannerSidePane(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Добавьте песню в план",
-                    color = MaterialTheme
-                        .colorScheme
-                        .outline
+                    text = emptyStateText,
+                    color = MaterialTheme.colorScheme.outline
                 )
             }
         } else {
