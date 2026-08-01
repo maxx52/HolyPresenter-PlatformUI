@@ -146,101 +146,40 @@ fun PlannerSidePane(
     }
 
     if (showNewPlanDialog) {
-        AlertDialog(
-            onDismissRequest = {
+        NewPlanDialog(
+            onConfirm = {
+                plannerService?.newPlan()
                 showNewPlanDialog = false
             },
-            title = {
-                Text("Создать новый план?")
-            },
-            text = {
-                Text(
-                    "Текущий план будет закрыт. " + "Именованный план уже сохранён автоматически."
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        plannerService?.newPlan()
-                        showNewPlanDialog = false
-                    }
-                ) {
-                    Text("Создать")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showNewPlanDialog = false
-                    }
-                ) {
-                    Text("Отмена")
-                }
+            onDismiss = {
+                showNewPlanDialog = false
             }
         )
     }
 
     if (showSaveAsDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showSaveAsDialog = false
+        SavePlanAsDialog(
+            name = saveAsName,
+            error = saveAsError,
+            onNameChange = { value ->
+                saveAsName = value
                 saveAsError = null
             },
-            title = {
-                Text("Сохранить план как")
-            },
-            text = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = saveAsName,
-                        onValueChange = { value ->
-                            saveAsName = value
-                            saveAsError = null
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = {
-                            Text("Название плана")
-                        },
-                        singleLine = true,
-                        isError = saveAsError != null,
-                        supportingText = {
-                            saveAsError?.let {
-                                Text(it)
-                            }
-                        }
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    enabled = saveAsName.isNotBlank(),
-                    onClick = {
-                        val saved = plannerService
-                            ?.saveAs(saveAsName) == true
+            onConfirm = {
+                val saved =
+                    plannerService?.saveAs(saveAsName) == true
 
-                        if (saved) {
-                            showSaveAsDialog = false
-                            saveAsName = ""
-                            saveAsError = null
-                        } else {
-                            saveAsError = "Введите уникальное название"
-                        }
-                    }
-                ) {
-                    Text("Сохранить")
+                if (saved) {
+                    showSaveAsDialog = false
+                    saveAsName = ""
+                    saveAsError = null
+                } else {
+                    saveAsError = "Введите уникальное название"
                 }
             },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showSaveAsDialog = false
-                        saveAsError = null
-                    }
-                ) {
-                    Text("Отмена")
-                }
+            onDismiss = {
+                showSaveAsDialog = false
+                saveAsError = null
             }
         )
     }
