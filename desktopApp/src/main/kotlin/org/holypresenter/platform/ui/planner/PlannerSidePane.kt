@@ -3,10 +3,9 @@ package org.holypresenter.platform.ui.planner
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import holypresenter.org.platform.api.planner.PlannerInfo
 import holypresenter.org.platform.api.planner.PlannerItem
 import holypresenter.org.platform.api.planner.PlannerService
 import org.holypresenter.platform.ui.workspace.HolySidePane
@@ -15,63 +14,32 @@ import org.holypresenter.platform.ui.workspace.HolySidePane
 fun PlannerSidePane(
     plannerService: PlannerService?,
     modifier: Modifier = Modifier,
-    emptyStateText: String = "Добавьте элемент в план",
+    emptyStateText: String =
+        "Добавьте элемент в план",
     onItemClick: (
         item: PlannerItem,
         index: Int
     ) -> Unit = { _, _ -> }
 ) {
-    val items = plannerService
-        ?.state
-        ?.items
-        .orEmpty()
+    val items =
+        plannerService
+            ?.state
+            ?.items
+            .orEmpty()
 
-    val activeItemIndex = plannerService
-        ?.state
-        ?.activeItemIndex
+    val activeItemIndex =
+        plannerService
+            ?.state
+            ?.activeItemIndex
 
-    val currentPlanName = plannerService?.currentPlanName
-    val availablePlans = plannerService?.plans.orEmpty()
+    val currentPlanName =
+        plannerService?.currentPlanName
 
-    var showSaveAsDialog by remember {
-        mutableStateOf(false)
-    }
+    val availablePlans =
+        plannerService?.plans.orEmpty()
 
-    var showOpenDialog by remember {
-        mutableStateOf(false)
-    }
-
-    var showNewPlanDialog by remember {
-        mutableStateOf(false)
-    }
-
-    var saveAsName by remember {
-        mutableStateOf("")
-    }
-
-    var saveAsError by remember {
-        mutableStateOf<String?>(null)
-    }
-
-    var planToRename by remember {
-        mutableStateOf<PlannerInfo?>(null)
-    }
-
-    var renameName by remember {
-        mutableStateOf("")
-    }
-
-    var renameError by remember {
-        mutableStateOf<String?>(null)
-    }
-
-    var planToDelete by remember {
-        mutableStateOf<PlannerInfo?>(null)
-    }
-
-    var deleteError by remember {
-        mutableStateOf<String?>(null)
-    }
+    val dialogs =
+        rememberPlannerDialogState()
 
     HolySidePane(
         title = "План служения",
@@ -84,24 +52,26 @@ fun PlannerSidePane(
                 if (items.isEmpty()) {
                     plannerService?.newPlan()
                 } else {
-                    showNewPlanDialog = true
+                    dialogs.openNewPlanDialog()
                 }
             },
             onOpenPlan = {
-                showOpenDialog = true
+                dialogs.openPlansDialog()
             },
             onSaveAs = {
-                saveAsName = ""
-                saveAsError = null
-                showSaveAsDialog = true
+                dialogs.openSaveAsDialog()
             }
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
 
         HorizontalDivider()
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
 
         PlannerItemsList(
             items = items,
@@ -121,123 +91,120 @@ fun PlannerSidePane(
         )
     }
 
-    if (showNewPlanDialog) {
+    if (dialogs.showNewPlanDialog) {
         NewPlanDialog(
             onConfirm = {
                 plannerService?.newPlan()
-                showNewPlanDialog = false
+                dialogs.closeNewPlanDialog()
             },
             onDismiss = {
-                showNewPlanDialog = false
+                dialogs.closeNewPlanDialog()
             }
         )
     }
 
-    if (showSaveAsDialog) {
+    if (dialogs.showSaveAsDialog) {
         SavePlanAsDialog(
-            name = saveAsName,
-            error = saveAsError,
+            name = dialogs.saveAsName,
+            error = dialogs.saveAsError,
             onNameChange = { value ->
-                saveAsName = value
-                saveAsError = null
+                dialogs.changeSaveAsName(value)
             },
             onConfirm = {
-                val saved = plannerService?.saveAs(saveAsName) == true
+                val saved =
+                    plannerService?.saveAs(
+                        dialogs.saveAsName
+                    ) == true
 
                 if (saved) {
-                    showSaveAsDialog = false
-                    saveAsName = ""
-                    saveAsError = null
+                    dialogs.completeSaveAs()
                 } else {
-                    saveAsError = "Введите уникальное название"
+                    dialogs.showSaveAsError(
+                        "Введите уникальное название"
+                    )
                 }
             },
             onDismiss = {
-                showSaveAsDialog = false
-                saveAsError = null
+                dialogs.closeSaveAsDialog()
             }
         )
     }
 
-    if (showOpenDialog) {
+    if (dialogs.showOpenDialog) {
         OpenPlanDialog(
             plans = availablePlans,
-            currentPlanId = plannerService?.currentPlanId,
+            currentPlanId =
+                plannerService?.currentPlanId,
             onOpen = { plan ->
-                val opened = plannerService?.openPlan(plan.id) == true
+                val opened =
+                    plannerService?.openPlan(
+                        plan.id
+                    ) == true
 
                 if (opened) {
-                    showOpenDialog = false
+                    dialogs.closePlansDialog()
                 }
             },
             onRename = { plan ->
-                planToRename = plan
-                renameName = plan.name
-                renameError = null
-                showOpenDialog = false
+                dialogs.beginRename(plan)
             },
             onDelete = { plan ->
-                planToDelete = plan
-                deleteError = null
-                showOpenDialog = false
+                dialogs.beginDelete(plan)
             },
             onDismiss = {
-                showOpenDialog = false
+                dialogs.closePlansDialog()
             }
         )
     }
 
-    planToRename?.let { plan ->
+    dialogs.planToRename?.let { plan ->
         RenamePlanDialog(
-            name = renameName,
-            error = renameError,
+            name = dialogs.renameName,
+            error = dialogs.renameError,
             onNameChange = { value ->
-                renameName = value
-                renameError = null
+                dialogs.changeRenameName(value)
             },
             onConfirm = {
                 val renamed =
                     plannerService?.renamePlan(
                         planId = plan.id,
-                        newName = renameName
+                        newName = dialogs.renameName
                     ) == true
 
                 if (renamed) {
-                    planToRename = null
-                    renameName = ""
-                    renameError = null
-                    showOpenDialog = true
+                    dialogs.completeRename()
                 } else {
-                    renameError = "Введите уникальное название"
+                    dialogs.showRenameError(
+                        "Введите уникальное название"
+                    )
                 }
             },
             onDismiss = {
-                planToRename = null
-                renameError = null
-                showOpenDialog = true
+                dialogs.closeRenameDialog()
             }
         )
     }
 
-    planToDelete?.let { plan ->
+    dialogs.planToDelete?.let { plan ->
         DeletePlanDialog(
             planName = plan.name,
-            error = deleteError,
+            error = dialogs.deleteError,
             onConfirm = {
-                val deleted = plannerService?.deletePlan(plan.id) == true
+                val deleted =
+                    plannerService?.deletePlan(
+                        plan.id
+                    ) == true
 
                 if (deleted) {
-                    planToDelete = null
-                    deleteError = null
-                    showOpenDialog = true
+                    dialogs.completeDelete()
                 } else {
-                    deleteError = "Не удалось удалить план"
+                    dialogs.showDeleteError(
+                        "Не удалось удалить план"
+                    )
                 }
             },
             onDismiss = {
-                planToDelete = null
-                deleteError = null
-                showOpenDialog = true
+                dialogs.closeDeleteDialog()
             }
         )
     }
