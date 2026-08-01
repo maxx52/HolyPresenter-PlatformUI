@@ -1,38 +1,14 @@
 package org.holypresenter.platform.ui.planner
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import holypresenter.org.platform.api.planner.PlannerInfo
 import holypresenter.org.platform.api.planner.PlannerItem
 import holypresenter.org.platform.api.planner.PlannerService
-import org.holypresenter.platform.ui.interaction.dragdrop.HolyReorderColumn
 import org.holypresenter.platform.ui.workspace.HolySidePane
 
 @Composable
@@ -166,8 +142,7 @@ fun PlannerSidePane(
                 saveAsError = null
             },
             onConfirm = {
-                val saved =
-                    plannerService?.saveAs(saveAsName) == true
+                val saved = plannerService?.saveAs(saveAsName) == true
 
                 if (saved) {
                     showSaveAsDialog = false
@@ -185,224 +160,84 @@ fun PlannerSidePane(
     }
 
     if (showOpenDialog) {
-        AlertDialog(
-            onDismissRequest = {
+        OpenPlanDialog(
+            plans = availablePlans,
+            currentPlanId = plannerService?.currentPlanId,
+            onOpen = { plan ->
+                val opened = plannerService?.openPlan(plan.id) == true
+
+                if (opened) {
+                    showOpenDialog = false
+                }
+            },
+            onRename = { plan ->
+                planToRename = plan
+                renameName = plan.name
+                renameError = null
                 showOpenDialog = false
             },
-            title = {
-                Text("Открыть план")
+            onDelete = { plan ->
+                planToDelete = plan
+                deleteError = null
+                showOpenDialog = false
             },
-            text = {
-                if (availablePlans.isEmpty()) {
-                    Text("Сохранённых планов пока нет.")
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.heightIn(max = 360.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        items(
-                            items = availablePlans,
-                            key = { plan ->
-                                plan.id
-                            }
-                        ) { plan ->
-                            val selected = plan.id == plannerService?.currentPlanId
-
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                color =
-                                    if (selected) {
-                                        MaterialTheme.colorScheme.secondaryContainer
-                                    } else {
-                                        MaterialTheme.colorScheme.surface
-                                    }
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = plan.name,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .clickable {
-                                                val opened =
-                                                    plannerService
-                                                        ?.openPlan(plan.id) == true
-                                                if (opened) {
-                                                    showOpenDialog = false
-                                                }
-                                            }
-                                            .padding(
-                                                horizontal = 12.dp,
-                                                vertical = 10.dp
-                                            ),
-                                        color =
-                                            if (selected) {
-                                                MaterialTheme.colorScheme.onSecondaryContainer
-                                            } else {
-                                                MaterialTheme.colorScheme.onSurface
-                                            }
-                                    )
-
-                                    TextButton(
-                                        onClick = {
-                                            planToRename = plan
-                                            renameName = plan.name
-                                            renameError = null
-                                            showOpenDialog = false
-                                        }
-                                    ) {
-                                        Text("Изменить")
-                                    }
-
-                                    TextButton(
-                                        onClick = {
-                                            planToDelete = plan
-                                            deleteError = null
-                                            showOpenDialog = false
-                                        }
-                                    ) {
-                                        Text(
-                                            text = "Удалить",
-                                            color = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showOpenDialog = false
-                    }
-                ) {
-                    Text("Закрыть")
-                }
+            onDismiss = {
+                showOpenDialog = false
             }
         )
     }
 
     planToRename?.let { plan ->
-        AlertDialog(
-            onDismissRequest = {
+        RenamePlanDialog(
+            name = renameName,
+            error = renameError,
+            onNameChange = { value ->
+                renameName = value
+                renameError = null
+            },
+            onConfirm = {
+                val renamed =
+                    plannerService?.renamePlan(
+                        planId = plan.id,
+                        newName = renameName
+                    ) == true
+
+                if (renamed) {
+                    planToRename = null
+                    renameName = ""
+                    renameError = null
+                    showOpenDialog = true
+                } else {
+                    renameError = "Введите уникальное название"
+                }
+            },
+            onDismiss = {
                 planToRename = null
                 renameError = null
                 showOpenDialog = true
-            },
-            title = {
-                Text("Переименовать план")
-            },
-            text = {
-                OutlinedTextField(
-                    value = renameName,
-                    onValueChange = { value ->
-                        renameName = value
-                        renameError = null
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = {
-                        Text("Название плана")
-                    },
-                    singleLine = true,
-                    isError = renameError != null,
-                    supportingText = {
-                        renameError?.let { message ->
-                            Text(message)
-                        }
-                    }
-                )
-            },
-            confirmButton = {
-                Button(
-                    enabled = renameName.isNotBlank(),
-                    onClick = {
-                        val renamed = plannerService?.renamePlan(plan.id, renameName) == true
-
-                        if (renamed) {
-                            planToRename = null
-                            renameName = ""
-                            renameError = null
-                            showOpenDialog = true
-                        } else {
-                            renameError = "Введите уникальное название"
-                        }
-                    }
-                ) {
-                    Text("Сохранить")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        planToRename = null
-                        renameError = null
-                        showOpenDialog = true
-                    }
-                ) {
-                    Text("Отмена")
-                }
             }
         )
     }
 
     planToDelete?.let { plan ->
-        AlertDialog(
-            onDismissRequest = {
+        DeletePlanDialog(
+            planName = plan.name,
+            error = deleteError,
+            onConfirm = {
+                val deleted = plannerService?.deletePlan(plan.id) == true
+
+                if (deleted) {
+                    planToDelete = null
+                    deleteError = null
+                    showOpenDialog = true
+                } else {
+                    deleteError = "Не удалось удалить план"
+                }
+            },
+            onDismiss = {
                 planToDelete = null
                 deleteError = null
                 showOpenDialog = true
-            },
-            title = {
-                Text("Удалить план?")
-            },
-            text = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text("План «${plan.name}» будет удалён без возможности восстановления.")
-
-                    deleteError?.let { message ->
-                        Text(
-                            text = message,
-                            color =
-                                MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val deleted = plannerService?.deletePlan(plan.id) == true
-
-                        if (deleted) {
-                            planToDelete = null
-                            deleteError = null
-                            showOpenDialog = true
-                        } else {
-                            deleteError = "Не удалось удалить план"
-                        }
-                    }
-                ) {
-                    Text("Удалить")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        planToDelete = null
-                        deleteError = null
-                        showOpenDialog = true
-                    }
-                ) {
-                    Text("Отмена")
-                }
             }
         )
     }
