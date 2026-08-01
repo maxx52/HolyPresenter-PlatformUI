@@ -127,94 +127,22 @@ fun PlannerSidePane(
 
         Spacer(Modifier.height(12.dp))
 
-        if (items.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = emptyStateText,
-                    color = MaterialTheme.colorScheme.outline
+        PlannerItemsList(
+            items = items,
+            activeItemIndex = activeItemIndex,
+            emptyStateText = emptyStateText,
+            modifier = Modifier.weight(1f),
+            onMove = { fromIndex, toIndex ->
+                plannerService?.move(
+                    fromIndex = fromIndex,
+                    toIndex = toIndex
                 )
-            }
-        } else {
-            HolyReorderColumn(
-                items = items,
-                modifier = Modifier.weight(1f),
-                onMove = { fromIndex, toIndex ->
-                    plannerService?.move(
-                        fromIndex = fromIndex,
-                        toIndex = toIndex
-                    )
-                }
-            ) { item, index, _ ->
-                val active = activeItemIndex == index
-
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (active) {
-                        MaterialTheme
-                            .colorScheme
-                            .primaryContainer
-                    } else {
-                        MaterialTheme
-                            .colorScheme
-                            .surface
-                    },
-                    tonalElevation =
-                        if (active) {
-                            2.dp
-                        } else {
-                            0.dp
-                        }
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onItemClick(item, index)
-                            }
-                            .padding(
-                                start = 12.dp,
-                                end = 4.dp,
-                                top = 8.dp,
-                                bottom = 8.dp
-                            ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "${index + 1}. " + item.title,
-                            modifier = Modifier.weight(1f),
-                            color =
-                                if (active) {
-                                    MaterialTheme
-                                        .colorScheme
-                                        .onPrimaryContainer
-                                } else {
-                                    MaterialTheme
-                                        .colorScheme
-                                        .onSurface
-                                }
-                        )
-
-                        TextButton(
-                            onClick = {
-                                plannerService?.remove(item)
-                            }
-                        ) {
-                            Text("×")
-                        }
-                    }
-                }
-
-                Spacer(
-                    Modifier.height(8.dp)
-                )
-            }
-        }
+            },
+            onRemove = { item ->
+                plannerService?.remove(item)
+            },
+            onItemClick = onItemClick
+        )
     }
 
     if (showNewPlanDialog) {
