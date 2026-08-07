@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import holypresenter.org.platform.api.planner.PlannerItem
 import org.holypresenter.platform.ui.interaction.dragdrop.HolyReorderColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 internal fun PlannerItemsList(
@@ -35,6 +37,8 @@ internal fun PlannerItemsList(
         index: Int
     ) -> Unit
 ) {
+    val scrollState = rememberScrollState()
+
     if (items.isEmpty()) {
         Box(
             modifier = modifier.fillMaxWidth(),
@@ -54,7 +58,8 @@ internal fun PlannerItemsList(
 
     HolyReorderColumn(
         items = items,
-        modifier = modifier,
+        modifier = modifier
+            .verticalScroll(scrollState),
         onMove = onMove
     ) { item, index, _ ->
         val active =
